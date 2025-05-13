@@ -4,11 +4,24 @@ import 'package:flutter_movie_app/presentation/providers/home_provider.dart';
 import 'package:flutter_movie_app/presentation/widgets/movie_list.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class HomePage extends ConsumerWidget {
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends ConsumerState<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(homeProvider.notifier).fetchAllMovies();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final homeState = ref.watch(homeProvider);
 
     return Scaffold(
@@ -26,21 +39,26 @@ class HomePage extends ConsumerWidget {
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ),
-                Hero(
-                  tag: 'popular_1',
-                  child: Container(
-                    height: 300,
-                    margin: const EdgeInsets.symmetric(horizontal: 20),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      image: DecorationImage(
-                        image: NetworkImage(
-                          state.popularMovies.isNotEmpty
-                              ? '${ApiConstants.imageBaseUrl}${state.popularMovies[0].posterPath}'
-                              : 'https://image.tmdb.org/t/p/w500/sample.jpg',
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  child: Hero(
+                    tag: 'popular_1',
+                    child: Container(
+                      width: double.infinity,
+                      height: 300,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        image: DecorationImage(
+                          image: state.popularMovies.isNotEmpty
+                              ? NetworkImage('${ApiConstants.imageBaseUrl}${state.popularMovies[0].posterPath}')
+                              : const NetworkImage('https://placehold.co/500x750'),
+                          fit: BoxFit.cover,
+                          onError: (exception, stackTrace) => const Icon(Icons.error),
                         ),
-                        fit: BoxFit.cover,
                       ),
+                      child: state.popularMovies.isEmpty
+                          ? const Center(child: Text('인기 영화 데이터를 불러올 수 없습니다.'))
+                          : null,
                     ),
                   ),
                 ),
@@ -53,7 +71,19 @@ class HomePage extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(child: Text('오류 발생: $error')),
+        error: (error, stack) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text('데이터를 불러오는 중 오류가 발생했습니다.'),
+              Text('오류: $error'),
+              ElevatedButton(
+                onPressed: () => ref.read(homeProvider.notifier).fetchAllMovies(),
+                child: const Text('재시도'),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

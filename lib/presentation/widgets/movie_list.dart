@@ -37,6 +37,8 @@ class MovieList extends ConsumerWidget {
             movies = state.upcomingMovies;
             break;
         }
+        // 최대 20개로 제한
+        movies = movies.length > 20 ? movies.sublist(0, 20) : movies;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -49,11 +51,11 @@ class MovieList extends ConsumerWidget {
               ),
             ),
             SizedBox(
-              height: 180,
+              height: 180, // 리스트뷰 높이 180
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                itemCount: movies.length > 20 ? 20 : movies.length,
+                itemCount: movies.length,
                 itemBuilder: (context, index) {
                   final movie = movies[index];
                   return Padding(

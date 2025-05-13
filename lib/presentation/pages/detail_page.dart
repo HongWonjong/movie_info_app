@@ -3,35 +3,55 @@ import 'package:flutter_movie_app/core/constants/api_constants.dart';
 import 'package:flutter_movie_app/presentation/providers/detail_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class DetailPage extends ConsumerWidget {
+class DetailPage extends ConsumerStatefulWidget {
   final int movieId;
   final String heroTag;
 
   const DetailPage({super.key, required this.movieId, required this.heroTag});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    ref.read(detailProvider.notifier).fetchMovieDetail(movieId);
+  _DetailPageState createState() => _DetailPageState();
+}
+
+class _DetailPageState extends ConsumerState<DetailPage> {
+  @override
+  void initState() {
+    super.initState();
+    print('DetailPage initState - Hero tag: ${widget.heroTag}');
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      print('Fetching movie detail for ID: ${widget.movieId}');
+      ref.read(detailProvider.notifier).fetchMovieDetail(widget.movieId);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final detailState = ref.watch(detailProvider);
 
     return Scaffold(
       body: detailState.when(
         data: (state) {
           if (state.movieDetail == null) {
+            print('Movie detail is null for ID: ${widget.movieId}');
             return const Center(child: Text('영화 정보를 불러올 수 없습니다.'));
           }
+          print('Movie detail loaded: ${state.movieDetail!.title}');
           final movie = state.movieDetail!;
           return SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Hero(
-                  tag: heroTag,
+                  tag: widget.heroTag,
                   child: Image.network(
                     '${ApiConstants.imageBaseUrl}${movie.posterPath}',
                     fit: BoxFit.cover,
                     width: double.infinity,
                     height: 400,
+                    errorBuilder: (context, error, stackTrace) {
+                      print('Image load error: $error');
+                      return const Icon(Icons.error);
+                    },
                   ),
                 ),
                 Padding(
@@ -75,8 +95,8 @@ class DetailPage extends ConsumerWidget {
                             _buildInfoCard('평점', '${movie.voteAverage}'),
                             _buildInfoCard('투표수', '${movie.voteCount}'),
                             _buildInfoCard('인기점수', '${movie.popularity}'),
-                            _buildInfoCard('예산', '${movie.budget}'),
-                            _buildInfoCard('수익', '${movie.revenue}'),
+                            _buildInfoCard('예산', '\$${movie.budget}'),
+                            _buildInfoCard('수익', '\$${movie.revenue}'),
                           ],
                         ),
                       ),
@@ -101,6 +121,10 @@ class DetailPage extends ConsumerWidget {
                             child: Image.network(
                               '${ApiConstants.imageBaseUrl}$logo',
                               fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) {
+                                print('Production logo load error: $error');
+                                return const Icon(Icons.error);
+                              },
                             ),
                           ))
                               .toList(),
@@ -113,8 +137,28 @@ class DetailPage extends ConsumerWidget {
             ),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(child: Text('오류 발생: $error')),
+        loading: () {
+          print('Detail page loading for ID: ${widget.movieId}');
+          return const Center(child: CircularProgressIndicator());
+        },
+        error: (error, stack) {
+          print('Detail page error for ID: ${widget.movieId}: $error');
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('영화 정보를 불러오는 중 오류가 발생했습니다.'),
+                Text('오류: $error'),
+                ElevatedButton(
+                  onPressed: () {
+                    ref.read(detailProvider.notifier).fetchMovieDetail(widget.movieId);
+                  },
+                  child: const Text('재시도'),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

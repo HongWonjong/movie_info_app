@@ -35,8 +35,8 @@ class MovieRepositoryImpl implements MovieRepository {
   }
 
   @override
-  Future<MovieDetail?> fetchMovieDetail(int id) async {
-    final response = await dataSource.fetchMovieDetail(id);
+  Future<MovieDetail?> fetchMovieDetail(int id, {String appendToResponse = ''}) async {
+    final response = await dataSource.fetchMovieDetail(id, appendToResponse: appendToResponse);
     if (response == null) return null;
     return MovieDetail(
       budget: response.budget,
@@ -46,7 +46,7 @@ class MovieRepositoryImpl implements MovieRepository {
       response.productionCompanies.map((e) => e.logoPath).toList(),
       overview: response.overview,
       popularity: response.popularity,
-      posterPath: response.posterPath, // 추가된 매핑
+      posterPath: response.posterPath,
       releaseDate: DateTime.parse(response.releaseDate),
       revenue: response.revenue,
       runtime: response.runtime,

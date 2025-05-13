@@ -30,11 +30,21 @@ class DetailNotifier extends AsyncNotifier<DetailState> {
   }
 
   Future<void> fetchMovieDetail(int id) async {
+    print('Starting fetchMovieDetail for ID: $id');
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      final movieDetail = await ref.read(fetchMovieDetailProvider).execute(id);
+      final movieDetail = await ref.read(fetchMovieDetailProvider).execute(
+        id,
+        appendToResponse: 'videos,credits',
+      );
+      if (movieDetail == null) {
+        print('fetchMovieDetail returned null for ID: $id');
+      } else {
+        print('fetchMovieDetail succeeded for ID: $id, title: ${movieDetail.title}');
+      }
       return DetailState(movieDetail: movieDetail, isLoading: false);
     });
+    print('fetchMovieDetail state updated for ID: $id, state: $state');
   }
 }
 

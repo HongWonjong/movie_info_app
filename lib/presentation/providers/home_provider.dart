@@ -52,6 +52,7 @@ class HomeNotifier extends AsyncNotifier<HomeState> {
       final topRated = await ref.read(fetchTopRatedMoviesProvider).execute();
       final upcoming = await ref.read(fetchUpcomingMoviesProvider).execute();
 
+
       return HomeState(
         nowPlayingMovies: nowPlaying ?? [],
         popularMovies: popular ?? [],

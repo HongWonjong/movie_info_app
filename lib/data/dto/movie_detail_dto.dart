@@ -34,26 +34,31 @@ class MovieDetailDto extends Equatable {
   });
 
   factory MovieDetailDto.fromJson(Map<String, dynamic> json) {
-    return MovieDetailDto(
-      budget: json['budget'] ?? 0,
-      genres: (json['genres'] as List)
-          .map((e) => GenreDto.fromJson(e))
-          .toList(),
-      id: json['id'],
-      overview: json['overview'] ?? '',
-      popularity: (json['popularity'] as num).toDouble(),
-      posterPath: json['poster_path'] ?? '',
-      productionCompanies: (json['production_companies'] as List)
-          .map((e) => ProductionCompanyDto.fromJson(e))
-          .toList(),
-      releaseDate: json['release_date'] ?? '',
-      revenue: json['revenue'] ?? 0,
-      runtime: json['runtime'] ?? 0,
-      tagline: json['tagline'] ?? '',
-      title: json['title'] ?? '',
-      voteAverage: (json['vote_average'] as num).toDouble(),
-      voteCount: json['vote_count'] ?? 0,
-    );
+    try {
+      return MovieDetailDto(
+        budget: json['budget'] ?? 0,
+        genres: (json['genres'] as List? ?? [])
+            .map((e) => GenreDto.fromJson(e))
+            .toList(),
+        id: json['id'] ?? 0,
+        overview: json['overview'] ?? '',
+        popularity: (json['popularity'] as num?)?.toDouble() ?? 0.0,
+        posterPath: json['poster_path'] ?? '',
+        productionCompanies: (json['production_companies'] as List? ?? [])
+            .map((e) => ProductionCompanyDto.fromJson(e))
+            .toList(),
+        releaseDate: json['release_date'] ?? '1970-01-01',
+        revenue: json['revenue'] ?? 0,
+        runtime: json['runtime'] ?? 0,
+        tagline: json['tagline'] ?? '',
+        title: json['title'] ?? '',
+        voteAverage: (json['vote_average'] as num?)?.toDouble() ?? 0.0,
+        voteCount: json['vote_count'] ?? 0,
+      );
+    } catch (e) {
+      print('Error parsing MovieDetailDto: $e');
+      rethrow; // 디버깅 후 제거 가능
+    }
   }
 
   @override
@@ -83,7 +88,7 @@ class GenreDto extends Equatable {
 
   factory GenreDto.fromJson(Map<String, dynamic> json) {
     return GenreDto(
-      id: json['id'],
+      id: json['id'] ?? 0,
       name: json['name'] ?? '',
     );
   }
@@ -105,7 +110,7 @@ class ProductionCompanyDto extends Equatable {
 
   factory ProductionCompanyDto.fromJson(Map<String, dynamic> json) {
     return ProductionCompanyDto(
-      id: json['id'],
+      id: json['id'] ?? 0,
       logoPath: json['logo_path'] ?? '',
       name: json['name'] ?? '',
     );

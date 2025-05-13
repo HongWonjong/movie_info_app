@@ -7,7 +7,7 @@ class MovieDetail extends Equatable {
   final List<String> productionCompanyLogos;
   final String overview;
   final double popularity;
-  final String posterPath; // 추가된 필드
+  final String posterPath;
   final DateTime releaseDate;
   final int revenue;
   final int runtime;
