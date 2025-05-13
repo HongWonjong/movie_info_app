@@ -1,10 +1,8 @@
 영화 정보 앱
 
 TMDB API를 활용하여 영화 정보를 표시하는 Flutter 기반 애플리케이션입니다. 클린 아키텍처와 Riverpod를 적용하여 유지보수성과 확장성을 높였으며, Flutter의 Hero 위젯을 사용한 양방향 애니메이션, 공용 AppBar, iOS 및 Android 권한 관리를 구현했습니다. 이 프로젝트는 영화 정보 탐색과 UI/데이터 흐름 연습을 위해 제작되었습니다.
-
 📖 프로젝트 개요
 이 앱은 사용자가 다양한 영화 정보를 탐색할 수 있도록 설계되었습니다. 홈 화면에서는 인기 영화, 현재 상영중, 평점 높은 영화, 개봉 예정 영화를 확인할 수 있으며, 상세 페이지에서는 영화의 세부 정보와 흥행 데이터를 제공합니다. 카메라, 위치, 마이크 권한을 요청하여 QR 코드 스캔 및 위치 기반 영화관 추천 기능을 지원합니다. 클린 아키텍처를 기반으로 데이터 계층, 도메인 계층, 프레젠테이션 계층을 분리하여 코드의 가독성과 재사용성을 높였습니다.
-
 ✨ 주요 기능
 🖥️ 화면 구성 (Lv.1)
 
@@ -69,7 +67,6 @@ permission_handler 패키지를 사용하여 런타임 권한 요청.
 앱 시작 시 모든 권한이 허가된 경우 PermissionPage 자동 건너뛰기.
 Android와 iOS별 권한 처리 분기.
 
-
 🚀 설치 방법
 사전 준비
 
@@ -98,7 +95,6 @@ TMDB API 읽기 액세스 토큰: TMDB에서 회원가입 후 액세스 토큰 �
 
 
 
-
 📂 프로젝트 구조
 flutter_movie_app/
 ├── lib/
@@ -116,28 +112,27 @@ flutter_movie_app/
 주요 파일 및 역할
 
 Core Layer:
-api_constants.dart: TMDB API URL 및 상수.
-http_client.dart: HTTP 클라이언트 싱글톤.
-permission_service.dart: iOS/Android 권한 관리.
+core/constants/api_constants.dart: TMDB API URL 및 상수.
+core/network/http_client.dart: HTTP 클라이언트 싱글톤.
+core/permissions/permission_service.dart: iOS/Android 권한 관리.
 
 
 Data Layer:
-movie_datasource_impl.dart: TMDB API 호출.
-movie_response_dto.dart, movie_detail_dto.dart: JSON 파싱.
-movie_repository_impl.dart: 데이터 소스와 엔티티 매핑.
+data/datasource/movie_datasource_impl.dart: TMDB API 호출.
+data/dto/movie_response_dto.dart, data/dto/movie_detail_dto.dart: JSON 파싱.
+data/repository/movie_repository_impl.dart: 데이터 소스와 엔티티 매핑.
 
 
 Domain Layer:
-movie.dart, movie_detail.dart: 데이터 모델.
-fetch_now_playing_movies.dart, fetch_movie_detail.dart: 비즈니스 로직.
-movie_repository.dart: 데이터 소스 추상화.
+domain/entity/movie.dart, domain/entity/movie_detail.dart: 데이터 모델.
+domain/usecase/fetch_now_playing_movies.dart, domain/usecase/fetch_movie_detail.dart: 비즈니스 로직.
+domain/repository/movie_repository.dart: 데이터 소스 추상화.
 
 
 Presentation Layer:
-home_page.dart, detail_page.dart, permission_page.dart: UI 페이지.
-movie_list.dart, movie_card.dart, common_app_bar.dart: 재사용 위젯.
-home_provider.dart, detail_provider.dart: 상태 관리.
-
+presentation/pages/home_page.dart, presentation/pages/detail_page.dart, presentation/pages/permission_page.dart: UI 페이지.
+presentation/widgets/movie_list.dart, presentation/widgets/movie_card.dart, presentation/widgets/common_app_bar.dart: 재사용 위젯.
+presentation/providers/home_provider.dart, presentation/providers/detail_provider.dart: 상태 관리.
 
 
 
@@ -147,46 +142,390 @@ home_provider.dart, detail_provider.dart: 상태 관리.
 
 행동: 사용자가 앱을 실행.
 흐름:
-main.dart:
-.env에서 TMDB_ACCESS_TOKEN 로드.
-PermissionService로 권한 확인, HomePage 또는 PermissionPage 렌더링.
+lib/main.dart:
+.env 파일에서 TMDB_ACCESS_TOKEN을 로드 (flutter_dotenv).
+PermissionService의 areAllPermissionsGranted 메서드로 카메라, 위치, 마이크 권한 확인.
+권한이 허용되면 HomePage 렌더링, 그렇지 않으면 PermissionPage 표시.
+코드:home: FutureBuilder<bool>(
+future: PermissionService().areAllPermissionsGranted(),
+builder: (context, snapshot) {
+if (snapshot.connectionState == ConnectionState.waiting) {
+return const Center(child: CircularProgressIndicator());
+}
+if (snapshot.hasData && snapshot.data == true) {
+return const HomePage();
+}
+return const PermissionPage();
+},
+),
 
 
-permission_service.dart:
-카메라, 위치, 마이크 권한 확인.
 
 
-home_page.dart:
-initState에서 homeProvider의 fetchAllMovies 호출.
-CommonAppBar 렌더링 (제목: "Movie App", 뒤로 가기 버튼 없음).
+lib/core/permissions/permission_service.dart:
+permission_handler 패키지를 사용하여 권한 상태 확인.
+Android/iOS별 분기 처리.
+코드:Future<bool> areAllPermissionsGranted() async {
+if (Platform.isAndroid) {
+final cameraGranted = await isCameraPermissionGranted();
+final locationGranted = await isLocationPermissionGranted();
+final microphoneGranted = await isMicrophonePermissionGranted();
+return cameraGranted && locationGranted && microphoneGranted;
+} else if (Platform.isIOS) {
+final cameraGranted = await isCameraPermissionGranted();
+final locationGranted = await isLocationPermissionGranted();
+return cameraGranted && locationGranted;
+}
+return false;
+}
 
 
-home_provider.dart:
-fetchAllMovies에서 유스케이스(fetchNowPlayingMoviesProvider 등) 호출.
 
 
-usecase_providers.dart:
-유스케이스 인스턴스 제공.
+lib/presentation/pages/home_page.dart:
+ConsumerStatefulWidget으로, initState에서 homeProvider의 fetchAllMovies 호출.
+WidgetsBinding.instance.addPostFrameCallback으로 빌드 후 데이터 로드.
+공iest CommonAppBar 렌더링 (제목: "Movie App", 뒤로 가기 버튼 없음).
+코드:void initState() {
+super.initState();
+WidgetsBinding.instance.addPostFrameCallback((_) {
+ref.read(homeProvider.notifier).fetchAllMovies();
+});
+}
+appBar: CommonAppBar(
+title: 'Movie App',
+showBackButton: false,
+),
 
 
-fetch_now_playing_movies.dart 등:
-MovieRepository의 메서드 호출.
 
 
-movie_repository_impl.dart:
-MovieDataSource 호출, DTO를 엔티티로 변환.
+lib/presentation/providers/home_provider.dart:
+fetchAllMovies에서 now_playing, popular, top_rated, upcoming 영화 목록 요청.
+Riverpod 프로바이더를 통해 유스케이스 호출.
+AsyncValue로 로딩/데이터/에러 상태 관리.
+코드:Future<void> fetchAllMovies() async {
+state = const AsyncValue.loading();
+state = await AsyncValue.guard(() async {
+final nowPlaying = await ref.read(fetchNowPlayingMoviesProvider).execute();
+final popular = await ref.read(fetchPopularMoviesProvider).execute();
+final topRated = await ref.read(fetchTopRatedMoviesProvider).execute();
+final upcoming = await ref.read(fetchUpcomingMoviesProvider).execute();
+return HomeState(
+nowPlayingMovies: nowPlaying ?? [],
+popularMovies: popular ?? [],
+topRatedMovies: topRated ?? [],
+upcomingMovies: upcoming ?? [],
+isLoading: false,
+);
+});
+}
 
 
-movie_datasource_impl.dart:
-TMDB API 호출(/movie/now_playing 등), MovieResponseDto 파싱.
 
 
-movie_response_dto.dart:
+lib/presentation/providers/usecase_providers.dart:
+fetchNowPlayingMoviesProvider 등으로 유스케이스 인스턴스 제공.
+코드:final fetchNowPlayingMoviesProvider = Provider<FetchNowPlayingMovies>((ref) {
+final repository = ref.watch(movieRepositoryProvider);
+return FetchNowPlayingMovies(repository);
+});
+
+
+
+
+lib/domain/usecase/fetch_now_playing_movies.dart 등:
+MovieRepository의 해당 메서드 호출 (예: fetchNowPlayingMovies).
+코드:Future<List<Movie>?> execute() async {
+return await repository.fetchNowPlayingMovies();
+}
+
+
+
+
+lib/data/repository/movie_repository_impl.dart:
+MovieDataSource 호출, MovieResponseDto를 Movie 엔티티로 변환.
+코드:Future<List<Movie>?> fetchNowPlayingMovies() async {
+final response = await dataSource.fetchNowPlayingMovies();
+return _mapToMovies(response);
+}
+
+
+
+
+lib/data/datasource/movie_datasource_impl.dart:
+TMDB API 호출 (/movie/now_playing 등), MovieResponseDto 파싱.
+코드:Future<MovieResponseDto?> _fetchMovies(String url) async {
+final response = await _makeRequest('$url?language=ko-KR&page=1');
+if (response.statusCode == 200) {
+return MovieResponseDto.fromJson(jsonDecode(response.body));
+}
+return null;
+}
+
+
+
+
+lib/data/dto/movie_response_dto.dart:
 JSON 데이터를 MovieDto로 파싱.
+코드:factory MovieResponseDto.fromJson(Map<String, dynamic> json) {
+return MovieResponseDto(
+results: (json['results'] as List)
+.map((e) => MovieDto.fromJson(e))
+.toList(),
+);
+}
 
 
-home_page.dart, movie_list.dart, movie_card.dart:
+
+
+lib/presentation/pages/home_page.dart, lib/presentation/widgets/movie_list.dart, lib/presentation/widgets/movie_card.dart:
 영화 목록 렌더링, Hero 위젯으로 포스터 애니메이션 준비.
+코드 (movie_card.dart):Hero(
+tag: heroTag,
+child: Material(...),
+)
+
+
+
+
+
+
+결과: HomePage에 영화 목록 표시, 클릭 가능한 MovieCard.
+
+2. 영화 카드 클릭 및 DetailPage로 이동
+
+행동: 사용자가 HomePage의 영화 카드 또는 "가장 인기있는" 영화 클릭.
+흐름:
+lib/presentation/widgets/movie_card.dart 또는 lib/presentation/pages/home_page.dart:
+GestureDetector의 onTap 이벤트로 Navigator.push 호출.
+DetailPage로 이동, movieId와 heroTag 전달 (예: popular_123, featured_popular_123).
+코드 (movie_card.dart):onTap: () {
+print('Navigating to DetailPage with heroTag: $heroTag');
+Navigator.push(
+context,
+MaterialPageRoute(
+builder: (context) => DetailPage(
+movieId: movie.id,
+heroTag: heroTag,
+),
+),
+);
+}
+
+
+
+
+lib/presentation/pages/detail_page.dart:
+initState에서 detailProvider의 fetchMovieDetail 호출.
+공용 CommonAppBar 렌더링 (제목: "Movie App", 뒤로 가기 버튼 포함).
+Hero 위젯으로 포스터 애니메이션 준비.
+코드:void initState() {
+super.initState();
+print('DetailPage initState - Hero tag: ${widget.heroTag}');
+WidgetsBinding.instance.addPostFrameCallback((_) {
+print('Fetching movie detail for ID: ${widget.movieId}');
+ref.read(detailProvider.notifier).fetchMovieDetail(widget.movieId);
+});
+}
+appBar: CommonAppBar(
+title: 'Movie App',
+showBackButton: true,
+),
+
+
+
+
+lib/presentation/providers/detail_provider.dart:
+fetchMovieDetail에서 fetchMovieDetailProvider 호출, AsyncValue로 상태 관리.
+코드:Future<void> fetchMovieDetail(int id) async {
+state = const AsyncValue.loading();
+state = await AsyncValue.guard(() async {
+final movieDetail = await ref.read(fetchMovieDetailProvider).execute(
+id,
+appendToResponse: 'videos,credits',
+);
+return DetailState(movieDetail: movieDetail, isLoading: false);
+});
+}
+
+
+
+
+lib/presentation/providers/usecase_providers.dart:
+FetchMovieDetail 유스케이스 제공.
+코드:final fetchMovieDetailProvider = Provider<FetchMovieDetail>((ref) {
+final repository = ref.watch(movieRepositoryProvider);
+return FetchMovieDetail(repository);
+});
+
+
+
+
+lib/domain/usecase/fetch_movie_detail.dart:
+MovieRepository의 fetchMovieDetail 호출.
+코드:Future<MovieDetail?> execute(int id, {String appendToResponse = ''}) async {
+return await repository.fetchMovieDetail(id, appendToResponse: appendToResponse);
+}
+
+
+
+
+lib/data/repository/movie_repository_impl.dart:
+MovieDataSource 호출, MovieDetailDto를 MovieDetail로 변환.
+코드:Future<MovieDetail?> fetchMovieDetail(int id, {String appendToResponse = ''}) async {
+final response = await dataSource.fetchMovieDetail(id, appendToResponse: appendToResponse);
+if (response == null) return null;
+return MovieDetail(...);
+}
+
+
+
+
+lib/data/datasource/movie_datasource_impl.dart:
+TMDB API 호출 (/movie/{id}?append_to_response=videos,credits), MovieDetailDto 파싱.
+코드:Future<MovieDetailDto?> fetchMovieDetail(int id, {String appendToResponse = ''}) async {
+final response = await _makeRequest(ApiConstants.movieDetail(id, append: appendToResponse));
+if (response.statusCode == 200) {
+return MovieDetailDto.fromJson(jsonDecode(response.body));
+}
+return null;
+}
+
+
+
+
+lib/data/dto/movie_detail_dto.dart:
+JSON 데이터를 MovieDetailDto로 파싱.
+코드:factory MovieDetailDto.fromJson(Map<String, dynamic> json) {
+try {
+return MovieDetailDto(
+budget: json['budget'] ?? 0,
+genres: (json['genres'] as List? ?? []).map((e) => GenreDto.fromJson(e)).toList(),
+...
+);
+} catch (e) {
+print('Error parsing MovieDetailDto: $e');
+rethrow;
+}
+}
+
+
+
+
+lib/presentation/pages/detail_page.dart:
+detailProvider 상태 감시, 영화 상세 정보 렌더링.
+Hero 애니메이션으로 포스터 전환.
+코드:Hero(
+tag: widget.heroTag,
+child: Material(...),
+),
+
+
+
+
+
+
+결과: DetailPage에 영화 상세 정보 표시, HomePage → DetailPage Hero 애니메이션 작동.
+
+3. 뒤로 가기 버튼 클릭 및 HomePage로 복귀
+
+행동: 사용자가 DetailPage의 공용 AppBar에서 뒤로 가기 버튼 클릭.
+흐름:
+lib/presentation/widgets/common_app_bar.dart:
+IconButton의 onPressed로 Navigator.pop 호출.
+코드:leading: showBackButton
+? IconButton(
+icon: const Icon(Icons.arrow_back),
+onPressed: () {
+Navigator.pop(context);
+},
+)
+: null,
+
+
+
+
+lib/presentation/pages/detail_page.dart:
+Navigator.pop으로 DetailPage 종료, HomePage로 복귀.
+Hero 위젯으로 역방향 애니메이션 처리.
+
+
+lib/presentation/pages/home_page.dart:
+기존 homeProvider 데이터로 UI 렌더링.
+Hero 위젯으로 포스터 애니메이션 완료.
+CommonAppBar 표시.
+
+
+
+
+결과: DetailPage → HomePage 이동, 역방향 Hero 애니메이션 작동.
+
+🛠️ 사용된 의존성
+
+http: TMDB API 요청
+flutter_dotenv: 환경 변수 관리
+flutter_riverpod: 상태 관리 및 의존성 주입
+equatable: 객체 비교
+dartz: 함수형 프로그래밍 유틸리티
+permission_handler: iOS 및 Android 권한 관리
+flutter_test: 테스트 프레임워크
+mockito: 모킹 라이브러리
+
+자세한 의존성은 pubspec.yaml 파일을 참고하세요.
+🔍 트러블슈팅 가이드
+1. API 인증 문제
+
+현상: 영화 데이터가 로드되지 않음.
+해결:
+.env 파일에 올바른 TMDB_ACCESS_TOKEN 입력 확인.
+토큰은 TMDB API 설정 페이지에서 발급.
+movie_datasource_impl.dart에서 Authorization: Bearer 헤더 확인.
+
+
+
+2. 네트워크 오류
+
+현상: API 요청 실패.
+해결:
+인터넷 연결 확인.
+AndroidManifest.xml에 <uses-permission android:name="android.permission.INTERNET" /> 확인.
+Info.plist에 NSLocalNetworkUsageDescription 확인.
+
+
+
+3. Hero 애니메이션 문제
+
+현상: 애니메이션이 작동하지 않거나 충돌 발생.
+해결:
+HomePage와 DetailPage에서 동일한 heroTag 사용 확인.
+디버그 콘솔에서 Hero tag 로그 점검.
+Hero 위젯의 크기 및 가림 여부 확인.
+
+
+
+4. 권한 요청 문제
+
+현상: 권한 거부 또는 앱 설정 이동 실패.
+해결:
+AndroidManifest.xml과 Info.plist에 권한 선언 확인.
+PermissionService의 openAppSettings 호출 확인.
+iOS: Settings > Privacy & Security에서 권한 확인.
+Android: Settings > Apps > [App Name] > Permissions 확인.
+
+
+
+🤝 기여 방법
+
+이슈를 등록하여 개선점이나 버그 제안.
+포크 후 브랜치 생성, 새로운 기능 추가.
+풀 리퀘스트 제출, 코드 리뷰 요청.
+
+📜 라이선스
+이 프로젝트는 MIT 라이선스 하에 배포됩니다. 자세한 내용은 LICENSE 파일을 확인하세요.
+📸 스크린샷
+(TODO: 홈 화면, 상세 화면, 권한 화면 스크린샷 추가)
+
 
 
 
