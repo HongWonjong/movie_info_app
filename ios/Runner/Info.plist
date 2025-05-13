@@ -24,6 +24,12 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>카메라를 사용하여 영화 관련 QR 코드를 스캔합니다.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>위치를 사용하여 근처 영화관을 추천합니다.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>마이크를 사용하여 음성 명령을 처리합니다.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
