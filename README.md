@@ -1,4 +1,4 @@
-| <img src="./assets/1.png" alt="스크린샷 1" width="150"/> | <img src="./assets/2.png" alt="스크린샷 2" width="150"/> | <img src="./assets/3.png" alt="스크린샷 3" width="150"/> | <img src="./assets/4.png" alt="스크린샷 4" width="150"/> | <img src="./assets/5.png" alt="스크린샷 5" width="150"/> |
+<img src="./assets/1.png" alt="스크린샷 1" width="150"/> | <img src="./assets/2.png" alt="스크린샷 2" width="150"/> | <img src="./assets/3.png" alt="스크린샷 3" width="150"/> | <img src="./assets/4.png" alt="스크린샷 4" width="150"/> | <img src="./assets/5.png" alt="스크린샷 5" width="150"/> 
 ---
 
 # 🎬 영화 정보 앱: Movie Explorer
