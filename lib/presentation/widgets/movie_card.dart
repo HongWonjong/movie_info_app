@@ -17,8 +17,10 @@ class MovieCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print('MovieCard build - Hero tag: $heroTag');
     return GestureDetector(
       onTap: () {
+        print('Navigating to DetailPage with heroTag: $heroTag');
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -45,7 +47,9 @@ class MovieCard extends StatelessWidget {
                         : 'https://placehold.co/120x180',
                   ),
                   fit: BoxFit.cover,
-                  onError: (exception, stackTrace) => const Icon(Icons.error),
+                  onError: (exception, stackTrace) {
+                    print('MovieCard image load error: $exception');
+                  },
                 ),
               ),
             ),

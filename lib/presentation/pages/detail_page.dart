@@ -3,6 +3,8 @@ import 'package:flutter_movie_app/core/constants/api_constants.dart';
 import 'package:flutter_movie_app/presentation/providers/detail_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../widgets/common_app_bar.dart';
+
 class DetailPage extends ConsumerStatefulWidget {
   final int movieId;
   final String heroTag;
@@ -29,6 +31,10 @@ class _DetailPageState extends ConsumerState<DetailPage> {
     final detailState = ref.watch(detailProvider);
 
     return Scaffold(
+      appBar: CommonAppBar(
+        title: 'Movie App',
+        showBackButton: true, // 뒤로 가기 버튼 포함
+      ),
       body: detailState.when(
         data: (state) {
           if (state.movieDetail == null) {

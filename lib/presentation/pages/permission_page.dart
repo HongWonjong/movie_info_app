@@ -3,6 +3,8 @@ import 'package:flutter_movie_app/core/permissions/permission_service.dart';
 import 'package:flutter_movie_app/presentation/providers/permission_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../widgets/common_app_bar.dart';
+
 class PermissionPage extends ConsumerWidget {
   const PermissionPage({super.key});
 
@@ -11,7 +13,10 @@ class PermissionPage extends ConsumerWidget {
     final permissionState = ref.watch(permissionProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('권한 설정')),
+      appBar: CommonAppBar(
+        title: 'Movie App',
+        showBackButton: false, // 권한 페이지에서는 뒤로 가기 버튼 제외
+      ),
       body: permissionState.when(
         data: (state) {
           return Padding(
@@ -32,7 +37,6 @@ class PermissionPage extends ConsumerWidget {
                   onPressed: () async {
                     await ref.read(permissionProvider.notifier).requestPermissions();
                     await ref.read(permissionProvider.notifier).openSettingsIfPermanentlyDenied();
-                    // 모든 권한이 허가된 경우 HomePage로 이동
                     final allGranted = await PermissionService().areAllPermissionsGranted();
                     if (allGranted) {
                       Navigator.pushReplacementNamed(context, '/home');
