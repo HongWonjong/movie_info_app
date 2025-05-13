@@ -1,9 +1,9 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_movie_app/core/constants/api_constants.dart';
 import 'package:flutter_movie_app/presentation/providers/detail_provider.dart';
+import 'package:flutter_movie_app/presentation/widgets/common_app_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import '../widgets/common_app_bar.dart';
 
 class DetailPage extends ConsumerStatefulWidget {
   final int movieId;
@@ -33,7 +33,7 @@ class _DetailPageState extends ConsumerState<DetailPage> {
     return Scaffold(
       appBar: CommonAppBar(
         title: 'Movie App',
-        showBackButton: true, // 뒤로 가기 버튼 포함
+        showBackButton: true,
       ),
       body: detailState.when(
         data: (state) {
@@ -49,15 +49,18 @@ class _DetailPageState extends ConsumerState<DetailPage> {
               children: [
                 Hero(
                   tag: widget.heroTag,
-                  child: Image.network(
-                    '${ApiConstants.imageBaseUrl}${movie.posterPath}',
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: 400,
-                    errorBuilder: (context, error, stackTrace) {
-                      print('Image load error: $error');
-                      return const Icon(Icons.error);
-                    },
+                  child: Material(
+                    type: MaterialType.transparency,
+                    child: Image.network(
+                      '${ApiConstants.imageBaseUrl}${movie.posterPath}',
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: 400,
+                      errorBuilder: (context, error, stackTrace) {
+                        print('Image load error: $error');
+                        return const Icon(Icons.error);
+                      },
+                    ),
                   ),
                 ),
                 Padding(

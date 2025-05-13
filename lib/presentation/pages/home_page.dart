@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_movie_app/core/constants/api_constants.dart';
 import 'package:flutter_movie_app/presentation/providers/home_provider.dart';
+import 'package:flutter_movie_app/presentation/widgets/common_app_bar.dart';
 import 'package:flutter_movie_app/presentation/widgets/movie_list.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../widgets/common_app_bar.dart';
 import 'detail_page.dart';
 
 class HomePage extends ConsumerStatefulWidget {
@@ -30,7 +30,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     return Scaffold(
       appBar: CommonAppBar(
         title: 'Movie App',
-        showBackButton: false, // 홈 페이지에서는 뒤로 가기 버튼 제외
+        showBackButton: false,
       ),
       body: homeState.when(
         data: (state) {
@@ -50,38 +50,43 @@ class _HomePageState extends ConsumerState<HomePage> {
                   child: GestureDetector(
                     onTap: () {
                       if (state.popularMovies.isNotEmpty) {
-                        print('Navigating to DetailPage with heroTag: featured_popular_1');
+                        print('Navigating to DetailPage with heroTag: featured_popular_${state.popularMovies[0].id}');
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => DetailPage(
                               movieId: state.popularMovies[0].id,
-                              heroTag: 'featured_popular_1',
+                              heroTag: 'featured_popular_${state.popularMovies[0].id}',
                             ),
                           ),
                         );
                       }
                     },
                     child: Hero(
-                      tag: 'featured_popular_1',
-                      child: Container(
-                        width: double.infinity,
-                        height: 300,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          image: DecorationImage(
-                            image: state.popularMovies.isNotEmpty
-                                ? NetworkImage('${ApiConstants.imageBaseUrl}${state.popularMovies[0].posterPath}')
-                                : const NetworkImage('https://placehold.co/500x750'),
-                            fit: BoxFit.cover,
-                            onError: (exception, stackTrace) {
-                              print('Featured image load error: $exception');
-                            },
+                      tag: state.popularMovies.isNotEmpty
+                          ? 'featured_popular_${state.popularMovies[0].id}'
+                          : 'featured_popular_placeholder',
+                      child: Material(
+                        type: MaterialType.transparency,
+                        child: Container(
+                          width: double.infinity,
+                          height: 300,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            image: DecorationImage(
+                              image: state.popularMovies.isNotEmpty
+                                  ? NetworkImage('${ApiConstants.imageBaseUrl}${state.popularMovies[0].posterPath}')
+                                  : const NetworkImage('https://placehold.co/500x750'),
+                              fit: BoxFit.cover,
+                              onError: (exception, stackTrace) {
+                                print('Featured image load error: $exception');
+                              },
+                            ),
                           ),
+                          child: state.popularMovies.isEmpty
+                              ? const Center(child: Text('인기 영화 데이터를 불러올 수 없습니다.'))
+                              : null,
                         ),
-                        child: state.popularMovies.isEmpty
-                            ? const Center(child: Text('인기 영화 데이터를 불러올 수 없습니다.'))
-                            : null,
                       ),
                     ),
                   ),

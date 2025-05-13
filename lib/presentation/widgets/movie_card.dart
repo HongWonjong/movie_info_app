@@ -35,21 +35,24 @@ class MovieCard extends StatelessWidget {
         children: [
           Hero(
             tag: heroTag,
-            child: Container(
-              width: 120,
-              height: 180,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                image: DecorationImage(
-                  image: NetworkImage(
-                    movie.posterPath.isNotEmpty
-                        ? '${ApiConstants.imageBaseUrl}${movie.posterPath}'
-                        : 'https://placehold.co/120x180',
+            child: Material(
+              type: MaterialType.transparency,
+              child: Container(
+                width: 120,
+                height: 180,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  image: DecorationImage(
+                    image: NetworkImage(
+                      movie.posterPath.isNotEmpty
+                          ? '${ApiConstants.imageBaseUrl}${movie.posterPath}'
+                          : 'https://placehold.co/120x180',
+                    ),
+                    fit: BoxFit.cover,
+                    onError: (exception, stackTrace) {
+                      print('MovieCard image load error: $exception');
+                    },
                   ),
-                  fit: BoxFit.cover,
-                  onError: (exception, stackTrace) {
-                    print('MovieCard image load error: $exception');
-                  },
                 ),
               ),
             ),
